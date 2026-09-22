@@ -5,372 +5,156 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>单词循环测</title>
 <style>
-  * {
-    box-sizing: border-box;
-    margin: 0;
-    padding: 0;
-    -webkit-tap-highlight-color: transparent;
-  }
-
-  html, body {
-    height: 100%;
-    overflow: hidden;
-  }
-
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  html, body { height: 100%; overflow: hidden; }
   body {
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC',
                  'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
     background: linear-gradient(145deg, #eef2ff 0%, #e0e7ff 50%, #ede9fe 100%);
     color: #1e293b;
   }
-
-  .page {
-    position: fixed;
-    inset: 0;
-    display: none;
-    align-items: center;
-    justify-content: center;
-    padding: 16px;
-  }
-  .page.active {
-    display: flex;
-    animation: fadeIn .28s ease;
-  }
-  @keyframes fadeIn {
-    from { opacity: 0; transform: translateY(8px); }
-    to   { opacity: 1; transform: none; }
-  }
+  .page { position: fixed; inset: 0; display: none; align-items: center; justify-content: center; padding: 16px; }
+  .page.active { display: flex; animation: fadeIn .28s ease; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
 
   .card {
-    width: 100%;
-    max-width: 540px;
-    max-height: calc(100dvh - 32px);
+    width: 100%; max-width: 540px; max-height: calc(100dvh - 32px);
     overflow-y: auto;
-    background: rgba(255, 255, 255, 0.88);
-    backdrop-filter: blur(18px);
-    -webkit-backdrop-filter: blur(18px);
-    border-radius: 28px;
-    padding: 30px 26px;
-    box-shadow: 0 20px 60px -20px rgba(79, 70, 229, 0.4),
-                0 0 0 1px rgba(255, 255, 255, 0.8) inset;
-    display: flex;
-    flex-direction: column;
-    gap: 18px;
+    background: rgba(255,255,255,0.88);
+    backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px);
+    border-radius: 28px; padding: 30px 26px;
+    box-shadow: 0 20px 60px -20px rgba(79,70,229,0.4), 0 0 0 1px rgba(255,255,255,0.8) inset;
+    display: flex; flex-direction: column; gap: 18px;
   }
-  .quiz-card {
-    min-height: min(500px, calc(100dvh - 32px));
-  }
+  .quiz-card { min-height: min(500px, calc(100dvh - 32px)); }
 
   h1 {
-    font-size: 1.65rem;
-    font-weight: 800;
-    letter-spacing: -0.02em;
+    font-size: 1.65rem; font-weight: 800; letter-spacing: -0.02em;
     background: linear-gradient(135deg, #4f46e5, #7c3aed);
-    -webkit-background-clip: text;
-    background-clip: text;
-    -webkit-text-fill-color: transparent;
+    -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
   }
-  .subtitle {
-    font-size: 0.88rem;
-    color: #64748b;
-    margin-top: 8px;
-    line-height: 1.55;
-  }
+  .subtitle { font-size: 0.88rem; color: #64748b; margin-top: 8px; line-height: 1.55; }
 
   .field { display: flex; flex-direction: column; gap: 9px; }
-  .field > label {
-    font-size: 0.82rem;
-    font-weight: 700;
-    color: #475569;
-    letter-spacing: 0.03em;
-  }
+  .field > label { font-size: 0.82rem; font-weight: 700; color: #475569; letter-spacing: 0.03em; }
 
   textarea {
-    width: 100%;
-    padding: 14px 16px;
-    border-radius: 16px;
-    border: 1.5px solid #e2e8f0;
-    background: #fff;
-    font-size: 0.95rem;
-    font-family: inherit;
-    line-height: 1.65;
-    resize: vertical;
-    min-height: 100px;
-    max-height: 180px;
-    outline: none;
-    transition: border-color .2s, box-shadow .2s;
+    width: 100%; padding: 14px 16px; border-radius: 16px;
+    border: 1.5px solid #e2e8f0; background: #fff;
+    font-size: 0.95rem; font-family: inherit; line-height: 1.65;
+    resize: vertical; min-height: 100px; max-height: 180px;
+    outline: none; transition: border-color .2s, box-shadow .2s;
   }
-  textarea:focus {
-    border-color: #6366f1;
-    box-shadow: 0 0 0 4px rgba(99, 102, 241, .15);
-  }
+  textarea:focus { border-color: #6366f1; box-shadow: 0 0 0 4px rgba(99,102,241,.15); }
 
-  .hint {
-    font-size: 0.76rem;
-    color: #94a3b8;
-    line-height: 1.6;
-  }
-  .hint code {
-    background: #eef2ff;
-    color: #4f46e5;
-    padding: 2px 7px;
-    border-radius: 6px;
-    font-size: 0.73rem;
-    font-weight: 600;
-  }
+  .hint { font-size: 0.76rem; color: #94a3b8; line-height: 1.6; }
+  .hint code { background: #eef2ff; color: #4f46e5; padding: 2px 7px; border-radius: 6px; font-size: 0.73rem; font-weight: 600; }
 
-  .action-row {
-    display: flex;
-    gap: 10px;
-  }
+  .action-row { display: flex; gap: 10px; }
 
   .import-msg {
-    display: none;
-    align-items: flex-start;
-    gap: 8px;
-    padding: 11px 14px;
-    border-radius: 14px;
-    font-size: 0.85rem;
-    font-weight: 700;
-    line-height: 1.55;
-    word-break: break-word;
+    display: none; align-items: flex-start; gap: 8px;
+    padding: 11px 14px; border-radius: 14px;
+    font-size: 0.85rem; font-weight: 700; line-height: 1.55; word-break: break-word;
     animation: fadeIn .22s ease;
   }
   .import-msg.show { display: flex; }
   .import-msg .icon { flex-shrink: 0; font-size: 1rem; line-height: 1.4; }
-  .import-msg.success {
-    background: #ecfdf5;
-    color: #047857;
-    border: 1px solid #a7f3d0;
-  }
-  .import-msg.error {
-    background: #fef2f2;
-    color: #b91c1c;
-    border: 1px solid #fecaca;
-  }
+  .import-msg.success { background: #ecfdf5; color: #047857; border: 1px solid #a7f3d0; }
+  .import-msg.error { background: #fef2f2; color: #b91c1c; border: 1px solid #fecaca; }
 
   .mode-selector { display: flex; gap: 10px; }
   .mode-option {
-    flex: 1;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    padding: 13px 10px;
-    border-radius: 15px;
-    border: 1.5px solid #e2e8f0;
-    background: #fff;
-    cursor: pointer;
-    font-weight: 700;
-    font-size: 0.94rem;
-    color: #64748b;
-    transition: all .2s;
-    user-select: none;
+    flex: 1; display: flex; align-items: center; justify-content: center; gap: 8px;
+    padding: 13px 10px; border-radius: 15px; border: 1.5px solid #e2e8f0;
+    background: #fff; cursor: pointer; font-weight: 700; font-size: 0.94rem;
+    color: #64748b; transition: all .2s; user-select: none;
   }
   .mode-option:has(input:checked) {
-    border-color: #6366f1;
-    background: #eef2ff;
-    color: #4f46e5;
-    box-shadow: 0 6px 16px -6px rgba(99, 102, 241, .5);
+    border-color: #6366f1; background: #eef2ff; color: #4f46e5;
+    box-shadow: 0 6px 16px -6px rgba(99,102,241,.5);
   }
   .mode-option input { accent-color: #6366f1; width: 16px; height: 16px; }
 
   .primary-btn {
-    width: 100%;
-    padding: 15px 22px;
-    border: none;
-    border-radius: 16px;
+    width: 100%; padding: 15px 22px; border: none; border-radius: 16px;
     background: linear-gradient(135deg, #6366f1, #8b5cf6);
-    color: #fff;
-    font-size: 1rem;
-    font-weight: 700;
-    font-family: inherit;
-    cursor: pointer;
-    letter-spacing: 0.02em;
+    color: #fff; font-size: 1rem; font-weight: 700; font-family: inherit;
+    cursor: pointer; letter-spacing: 0.02em;
     transition: transform .15s, box-shadow .2s, opacity .2s;
-    box-shadow: 0 10px 26px -8px rgba(99, 102, 241, .65);
+    box-shadow: 0 10px 26px -8px rgba(99,102,241,.65);
   }
-  .primary-btn:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 14px 30px -8px rgba(99, 102, 241, .75);
-  }
+  .primary-btn:hover { transform: translateY(-1px); box-shadow: 0 14px 30px -8px rgba(99,102,241,.75); }
   .primary-btn:active { transform: scale(.98); }
-  .primary-btn:disabled {
-    opacity: .45;
-    pointer-events: none;
-    box-shadow: none;
-  }
+  .primary-btn:disabled { opacity: .45; pointer-events: none; box-shadow: none; }
 
   .ghost-btn {
-    background: #fff;
-    border: 1.5px solid #e2e8f0;
-    color: #475569;
-    padding: 14px 22px;
-    border-radius: 16px;
-    font-size: 0.95rem;
-    font-weight: 700;
-    font-family: inherit;
-    cursor: pointer;
-    transition: all .2s;
-    white-space: nowrap;
+    background: #fff; border: 1.5px solid #e2e8f0; color: #475569;
+    padding: 14px 22px; border-radius: 16px; font-size: 0.95rem; font-weight: 700;
+    font-family: inherit; cursor: pointer; transition: all .2s; white-space: nowrap;
   }
   .ghost-btn:hover { background: #f8fafc; border-color: #cbd5e1; }
   .ghost-btn:active { transform: scale(.98); }
 
   .back-btn {
-    background: transparent;
-    border: 1.5px solid #e2e8f0;
-    color: #475569;
-    padding: 8px 15px;
-    border-radius: 12px;
-    font-size: 0.84rem;
-    font-weight: 700;
-    font-family: inherit;
-    cursor: pointer;
-    transition: all .2s;
-    white-space: nowrap;
+    background: transparent; border: 1.5px solid #e2e8f0; color: #475569;
+    padding: 8px 15px; border-radius: 12px; font-size: 0.84rem; font-weight: 700;
+    font-family: inherit; cursor: pointer; transition: all .2s; white-space: nowrap;
   }
   .back-btn:hover { background: #f8fafc; border-color: #cbd5e1; }
 
-  .quiz-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 12px;
-    flex-wrap: wrap;
-  }
-  .stats {
-    display: flex;
-    align-items: center;
-    gap: 7px;
-    font-size: 0.76rem;
-    color: #64748b;
-    font-weight: 700;
-  }
+  .quiz-header { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+  .stats { display: flex; align-items: center; gap: 7px; font-size: 0.76rem; color: #64748b; font-weight: 700; }
   .dot { color: #cbd5e1; }
 
   .quiz-body {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    text-align: center;
-    gap: 14px;
-    padding: 16px 6px;
-    min-height: 170px;
+    flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
+    text-align: center; gap: 14px; padding: 16px 6px; min-height: 170px;
   }
-  .question-hint {
-    font-size: 0.76rem;
-    color: #94a3b8;
-    font-weight: 700;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-  }
+  .question-hint { font-size: 0.76rem; color: #94a3b8; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; }
   .question-prompt {
-    font-size: clamp(1.5rem, 7vw, 2.5rem);
-    font-weight: 800;
-    letter-spacing: -0.02em;
-    line-height: 1.3;
-    word-break: break-word;
+    font-size: clamp(1.5rem, 7vw, 2.5rem); font-weight: 800; letter-spacing: -0.02em;
+    line-height: 1.3; word-break: break-word;
     background: linear-gradient(135deg, #4f46e5, #7c3aed);
-    -webkit-background-clip: text;
-    background-clip: text;
-    -webkit-text-fill-color: transparent;
+    -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
     padding: 0 4px;
   }
 
-  .quiz-footer {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-  }
+  .quiz-footer { display: flex; flex-direction: column; gap: 12px; }
   .answer-area { display: flex; gap: 10px; }
   .answer-area input {
-    flex: 1;
-    min-width: 0;
-    padding: 14px 18px;
-    border-radius: 15px;
-    border: 1.5px solid #e2e8f0;
-    font-size: 1rem;
-    font-family: inherit;
-    outline: none;
-    background: #fff;
-    transition: border-color .2s, box-shadow .2s;
+    flex: 1; min-width: 0; padding: 14px 18px; border-radius: 15px;
+    border: 1.5px solid #e2e8f0; font-size: 1rem; font-family: inherit;
+    outline: none; background: #fff; transition: border-color .2s, box-shadow .2s;
   }
-  .answer-area input:focus {
-    border-color: #6366f1;
-    box-shadow: 0 0 0 4px rgba(99, 102, 241, .15);
-  }
-  .answer-area .primary-btn {
-    width: auto;
-    flex-shrink: 0;
-    padding: 14px 26px;
-  }
+  .answer-area input:focus { border-color: #6366f1; box-shadow: 0 0 0 4px rgba(99,102,241,.15); }
+  .answer-area .primary-btn { width: auto; flex-shrink: 0; padding: 14px 26px; }
 
-  .feedback {
-    min-height: 22px;
-    font-size: 0.85rem;
-    font-weight: 700;
-    text-align: center;
-    line-height: 1.5;
-  }
+  .feedback { min-height: 22px; font-size: 0.85rem; font-weight: 700; text-align: center; line-height: 1.5; }
   .feedback.correct { color: #059669; }
   .feedback.wrong { color: #dc2626; }
 
   .modal-overlay {
-    position: fixed;
-    inset: 0;
-    z-index: 100;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 20px;
-    background: rgba(15, 23, 42, 0.5);
-    backdrop-filter: blur(5px);
-    -webkit-backdrop-filter: blur(5px);
+    position: fixed; inset: 0; z-index: 100;
+    display: flex; align-items: center; justify-content: center; padding: 20px;
+    background: rgba(15,23,42,0.5);
+    backdrop-filter: blur(5px); -webkit-backdrop-filter: blur(5px);
   }
   .modal-overlay.hidden { display: none; }
-
   .modal-box {
-    width: 100%;
-    max-width: 380px;
-    background: #fff;
-    border-radius: 26px;
-    padding: 28px 24px 24px;
-    text-align: center;
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-    box-shadow: 0 30px 70px -20px rgba(0, 0, 0, .45);
-    animation: pop .26s cubic-bezier(.34, 1.4, .64, 1);
+    width: 100%; max-width: 380px; background: #fff; border-radius: 26px;
+    padding: 28px 24px 24px; text-align: center;
+    display: flex; flex-direction: column; gap: 12px;
+    box-shadow: 0 30px 70px -20px rgba(0,0,0,.45);
+    animation: pop .26s cubic-bezier(.34,1.4,.64,1);
   }
-  @keyframes pop {
-    from { transform: scale(.88); opacity: 0; }
-    to   { transform: scale(1);   opacity: 1; }
-  }
+  @keyframes pop { from { transform: scale(.88); opacity: 0; } to { transform: scale(1); opacity: 1; } }
   .modal-icon { font-size: 2.4rem; line-height: 1; }
-  .modal-title {
-    font-size: 1.12rem;
-    font-weight: 800;
-    color: #dc2626;
-  }
-  .modal-label {
-    font-size: 0.74rem;
-    color: #94a3b8;
-    font-weight: 700;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-  }
+  .modal-title { font-size: 1.12rem; font-weight: 800; color: #dc2626; }
+  .modal-label { font-size: 0.74rem; color: #94a3b8; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; }
   .modal-answer {
-    font-size: 1.35rem;
-    font-weight: 800;
-    color: #1e293b;
-    line-height: 1.4;
-    padding: 14px 12px;
-    border-radius: 16px;
-    background: #f1f5f9;
-    word-break: break-word;
+    font-size: 1.35rem; font-weight: 800; color: #1e293b; line-height: 1.4;
+    padding: 14px 12px; border-radius: 16px; background: #f1f5f9; word-break: break-word;
   }
   .modal-box .primary-btn { margin-top: 4px; }
 </style>
@@ -391,7 +175,7 @@
           placeholder="apple(苹果/苹果树), banana(香蕉), cat(猫), dog(狗)"></textarea>
         <p class="hint">
           格式：<code>单词(中文1/中文2)</code> 或 <code>单词:中文1/中文2</code><br>
-          没有中文释义的单词会被自动忽略
+          多个中文意思用 <code>/</code> 或 <code>、</code> 分隔，没有中文释义的会被忽略
         </p>
       </div>
 
@@ -474,31 +258,30 @@
   let locked = false;
   let pendingTimer = null;
 
-  /* DOM */
-  const pageImport   = document.getElementById('pageImport');
-  const pageQuiz     = document.getElementById('pageQuiz');
-  const wordInput    = document.getElementById('wordInput');
-  const importBtn    = document.getElementById('importBtn');
-  const resetInputBtn = document.getElementById('resetInputBtn');
-  const startBtn     = document.getElementById('startBtn');
-  const importMsg    = document.getElementById('importMsg');
-  const importMsgIcon = document.getElementById('importMsgIcon');
-  const importMsgText = document.getElementById('importMsgText');
-  const backBtn      = document.getElementById('backBtn');
-  const progressText = document.getElementById('progressText');
-  const remainingCount = document.getElementById('remainingCount');
-  const accuracyText = document.getElementById('accuracyText');
-  const questionHint = document.getElementById('questionHint');
-  const questionPrompt = document.getElementById('questionPrompt');
-  const answerInput  = document.getElementById('answerInput');
-  const submitBtn    = document.getElementById('submitBtn');
-  const feedbackMsg  = document.getElementById('feedbackMsg');
-  const modal        = document.getElementById('modal');
-  const modalLabel   = document.getElementById('modalLabel');
-  const modalAnswer  = document.getElementById('modalAnswer');
-  const modalCloseBtn = document.getElementById('modalCloseBtn');
+  const $ = id => document.getElementById(id);
+  const pageImport   = $('pageImport');
+  const pageQuiz     = $('pageQuiz');
+  const wordInput    = $('wordInput');
+  const importBtn    = $('importBtn');
+  const resetInputBtn = $('resetInputBtn');
+  const startBtn     = $('startBtn');
+  const importMsg    = $('importMsg');
+  const importMsgIcon = $('importMsgIcon');
+  const importMsgText = $('importMsgText');
+  const backBtn      = $('backBtn');
+  const progressText = $('progressText');
+  const remainingCount = $('remainingCount');
+  const accuracyText = $('accuracyText');
+  const questionHint = $('questionHint');
+  const questionPrompt = $('questionPrompt');
+  const answerInput  = $('answerInput');
+  const submitBtn    = $('submitBtn');
+  const feedbackMsg  = $('feedbackMsg');
+  const modal        = $('modal');
+  const modalLabel   = $('modalLabel');
+  const modalAnswer  = $('modalAnswer');
+  const modalCloseBtn = $('modalCloseBtn');
 
-  /* ---------- 工具函数 ---------- */
   function getQuizMode() {
     const checked = document.querySelector('input[name="quizMode"]:checked');
     return checked ? checked.value : 'en2ch';
@@ -529,9 +312,32 @@
     importMsgText.textContent = '';
   }
 
-  /* ---------- 解析导入内容 ---------- */
+  /* ================= 解析导入内容 =================
+     支持格式：
+       apple(苹果/苹果树)
+       apple(苹果,苹果树)
+       apple(苹果、苹果树)
+       apple:苹果/苹果树
+     多个中文意思的拆分符号： / 、 , ， ; ； 空格
+  =================================================== */
   function parseWordList(raw) {
-    const tokens = raw.split(',').map(s => s.trim()).filter(Boolean);
+    // 顶层用英文逗号切分。注意：如果中文用逗号分隔，会误切；
+    // 所以我们优先用 ")," 或 "), " 等模式来智能切分
+    // 简化方案：先按英文逗号切分，然后合并那些明显是括号内中文的碎片
+    let tokens = raw.split(',').map(s => s.trim()).filter(Boolean);
+
+    // 智能合并：如果某个 token 含有 "(" 但没有 ")"，说明逗号在括号内，需要和后面合并
+    const merged = [];
+    for (let i = 0; i < tokens.length; i++) {
+      let t = tokens[i];
+      while ((t.match(/\(/g) || []).length > (t.match(/\)/g) || []).length && i + 1 < tokens.length) {
+        i++;
+        t += ',' + tokens[i];
+      }
+      merged.push(t);
+    }
+    tokens = merged;
+
     const map = new Map();
     let skipped = 0;
 
@@ -539,15 +345,17 @@
       let en = '';
       let chList = [];
 
+      // 形式一： 单词(中文...)
       let m = token.match(/^(.+?)\s*[（(]\s*([^)）]+?)\s*[）)]\s*$/);
       if (m) {
         en = m[1].trim();
-        chList = m[2].split(/[\/、,，]/).map(s => s.trim()).filter(Boolean);
+        chList = m[2].split(/[\/、,，;；\s]+/).map(s => s.trim()).filter(Boolean);
       } else {
+        // 形式二： 单词:中文...
         m = token.match(/^(.+?)\s*[:：]\s*(.+)$/);
         if (m) {
           en = m[1].trim();
-          chList = m[2].split(/[\/、,，]/).map(s => s.trim()).filter(Boolean);
+          chList = m[2].split(/[\/、,，;；\s]+/).map(s => s.trim()).filter(Boolean);
         } else {
           skipped++;
           continue;
@@ -566,10 +374,9 @@
     return { list: [...map.values()], skipped };
   }
 
-  /* ---------- 导入 ---------- */
+  /* ================= 导入 ================= */
   function handleImport() {
     const raw = wordInput.value.trim();
-
     if (!raw) {
       vocabulary = [];
       startBtn.disabled = true;
@@ -591,13 +398,10 @@
     startBtn.disabled = false;
 
     let msg = `导入成功：共 ${list.length} 个单词。`;
-    if (skipped > 0) {
-      msg += `（已忽略 ${skipped} 个缺少中文释义的条目）`;
-    }
+    if (skipped > 0) msg += `（已忽略 ${skipped} 个缺少中文释义的条目）`;
     showImportMsg('success', msg);
   }
 
-  /* ---------- 重置输入 ---------- */
   function handleResetInput() {
     wordInput.value = '';
     vocabulary = [];
@@ -607,7 +411,7 @@
     wordInput.focus();
   }
 
-  /* ---------- 开始测验 ---------- */
+  /* ================= 开始测验 ================= */
   function startQuiz() {
     if (vocabulary.length === 0) return;
 
@@ -627,12 +431,11 @@
       showEmptyState();
     } else {
       pickNextWord();
-      // 只在开始练习时聚焦一次，方便直接输入
-      setTimeout(() => answerInput.focus(), 120);
+      // 开始练习时聚焦一次，方便直接输入
+      setTimeout(() => answerInput.focus(), 100);
     }
   }
 
-  /* ---------- 抽取下一题 ---------- */
   function pickNextWord() {
     if (wordPool.length === 0) {
       currentWord = null;
@@ -651,12 +454,10 @@
     renderQuestion();
   }
 
-  /* ---------- 渲染题目 ---------- */
   function renderQuestion() {
     if (!currentWord) { showEmptyState(); return; }
 
     const mode = getQuizMode();
-
     if (mode === 'en2ch') {
       questionPrompt.textContent = currentWord.en;
       questionHint.textContent = '写出中文意思（多个用 / 分隔）';
@@ -676,22 +477,18 @@
     // 注意：这里不再自动 focus，避免答对后键盘闪动
   }
 
-  /* ---------- 统计 ---------- */
   function updateStats() {
     const total = vocabulary.length;
     const remaining = wordPool.length;
     const done = total - remaining;
-
     progressText.textContent = `已掌握 ${done}/${total}`;
     remainingCount.textContent = `剩余 ${remaining}`;
-
     const attempts = correctCount + wrongCount;
     accuracyText.textContent = attempts > 0
       ? `正确率 ${Math.round(correctCount / attempts * 100)}%`
       : '正确率 --';
   }
 
-  /* ---------- 完成状态 ---------- */
   function showEmptyState() {
     questionHint.textContent = '本轮已完成';
     questionPrompt.textContent = '🎉 全部掌握！';
@@ -704,47 +501,53 @@
     updateStats();
   }
 
-  /* ---------- 答案判断 ---------- */
+  /* ================= 答案判断（核心修复） ================= */
   function checkAnswer(userAnswer, mode) {
     if (!currentWord) return false;
-
     const rawUser = userAnswer.trim();
     if (!rawUser) return false;
 
     if (mode === 'en2ch') {
-      // 中文：宽松匹配，只要命中任意一个正确意思就算对
-      const clean = s => s.replace(/[\s,，、.。?？!！;；:：\/\\（）()【】\[\]]/g, '').toLowerCase();
+      // 1) 清理函数：去掉常见中英文标点、空格、全角字符，统一小写
+      const clean = (s) => String(s)
+        .replace(/[\s\u3000]/g, '')                       // 空白（含全角空格）
+        .replace(/[，,、.。;；:：!！?？"'‘’“”()（）\[\]【】《》<>\/\\\-_]/g, '') // 标点
+        .toLowerCase();
 
-      // 用户输入可能包含多个意思（用 / 、 , 等分隔）
-      const userParts = rawUser
-        .split(/[\/、,，;；]/)
-        .map(s => s.trim())
-        .filter(Boolean);
-      // 如果拆分后为空，用原文
-      const candidates = userParts.length > 0 ? userParts : [rawUser];
+      // 2) 把标准答案展开成「可接受集合」
+      const SPLIT = /[\/、,，;；\s]+/;
+      const stdSet = new Set();
+      for (const chunk of currentWord.ch) {
+        const whole = clean(chunk);
+        if (whole) stdSet.add(whole);
+        String(chunk).split(SPLIT).forEach(p => {
+          const c = clean(p);
+          if (c) stdSet.add(c);
+        });
+      }
+      if (stdSet.size === 0) return false;
 
-      // 标准答案（多个）
-      const stdParts = currentWord.ch.filter(Boolean);
-      if (stdParts.length === 0) return false;
+      // 3) 把用户输入也拆成候选集合（同时保留完整输入作为一个候选）
+      const userSet = new Set();
+      const wholeUser = clean(rawUser);
+      if (wholeUser) userSet.add(wholeUser);
+      rawUser.split(SPLIT).forEach(p => {
+        const c = clean(p);
+        if (c) userSet.add(c);
+      });
 
-      // 任意一个用户答案 与 任意一个标准答案 完全相等（忽略空格/标点/大小写）即正确
-      for (const uc of candidates) {
-        const cleanUser = clean(uc);
-        if (!cleanUser) continue;
-        for (const sc of stdParts) {
-          if (cleanUser === clean(sc)) {
-            return true;
-          }
-        }
+      // 4) 只要任意一个用户候选命中标准集合，就算正确
+      for (const uc of userSet) {
+        if (stdSet.has(uc)) return true;
       }
       return false;
     } else {
-      // 英文：完全拼写正确（忽略大小写和首尾空格）
+      // 中 → 英：必须完全拼写正确（忽略大小写、首尾空格）
       return rawUser.toLowerCase() === currentWord.en.trim().toLowerCase();
     }
   }
 
-  /* ---------- 提交答案 ---------- */
+  /* ================= 提交答案 ================= */
   function handleSubmit() {
     if (locked || !currentWord) return;
 
@@ -766,13 +569,11 @@
 
       feedbackMsg.className = 'feedback correct';
       feedbackMsg.textContent = '✅ 正确！';
-
       updateStats();
 
-      // 锁定提交，但不禁用输入框（避免键盘收起再弹出）
       locked = true;
-
-      // 快速切换下一题（约 350ms 后）
+      // 不重新聚焦、不 blur，让输入法保持原状态，避免键盘闪动
+      // 快速切换到下一题
       pendingTimer = setTimeout(() => {
         pendingTimer = null;
         locked = false;
@@ -782,7 +583,7 @@
         } else {
           pickNextWord();
         }
-      }, 350);
+      }, 300);
 
     } else {
       /* ===== 答错 ===== */
@@ -791,7 +592,6 @@
       feedbackMsg.textContent = '❌ 答错了，正确答案已弹出';
       updateStats();
 
-      // 弹出正确答案（中文意思）
       const correctText = mode === 'en2ch'
         ? currentWord.ch.join(' / ')
         : currentWord.en;
@@ -801,7 +601,6 @@
     }
   }
 
-  /* ---------- 关闭弹窗，继续下一题 ---------- */
   function closeModalAndContinue() {
     modal.classList.add('hidden');
     answerInput.value = '';
@@ -813,7 +612,6 @@
     }
   }
 
-  /* ---------- 返回首页 ---------- */
   function goBack() {
     if (pendingTimer) { clearTimeout(pendingTimer); pendingTimer = null; }
     locked = false;
@@ -821,7 +619,7 @@
     switchPage('pageImport');
   }
 
-  /* ---------- 事件绑定 ---------- */
+  /* ================= 事件绑定 ================= */
   importBtn.addEventListener('click', handleImport);
   resetInputBtn.addEventListener('click', handleResetInput);
   startBtn.addEventListener('click', startQuiz);
@@ -855,7 +653,6 @@
     });
   });
 
-  /* 初始 */
   updateStats();
 })();
 </script>
