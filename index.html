@@ -24,7 +24,6 @@
     color: #1e293b;
   }
 
-  /* ---------- 页面容器 ---------- */
   .page {
     position: fixed;
     inset: 0;
@@ -42,7 +41,6 @@
     to   { opacity: 1; transform: none; }
   }
 
-  /* ---------- 卡片 ---------- */
   .card {
     width: 100%;
     max-width: 540px;
@@ -63,7 +61,6 @@
     min-height: min(500px, calc(100dvh - 32px));
   }
 
-  /* ---------- 标题 ---------- */
   h1 {
     font-size: 1.65rem;
     font-weight: 800;
@@ -80,7 +77,6 @@
     line-height: 1.55;
   }
 
-  /* ---------- 表单 ---------- */
   .field { display: flex; flex-direction: column; gap: 9px; }
   .field > label {
     font-size: 0.82rem;
@@ -123,13 +119,11 @@
     font-weight: 600;
   }
 
-  /* ---------- 导入/重置按钮行 ---------- */
   .action-row {
     display: flex;
     gap: 10px;
   }
 
-  /* ---------- 导入状态提示 ---------- */
   .import-msg {
     display: none;
     align-items: flex-start;
@@ -155,7 +149,6 @@
     border: 1px solid #fecaca;
   }
 
-  /* ---------- 模式选择 ---------- */
   .mode-selector { display: flex; gap: 10px; }
   .mode-option {
     flex: 1;
@@ -182,7 +175,6 @@
   }
   .mode-option input { accent-color: #6366f1; width: 16px; height: 16px; }
 
-  /* ---------- 按钮 ---------- */
   .primary-btn {
     width: 100%;
     padding: 15px 22px;
@@ -224,7 +216,6 @@
   }
   .ghost-btn:hover { background: #f8fafc; border-color: #cbd5e1; }
   .ghost-btn:active { transform: scale(.98); }
-  .ghost-btn:disabled { opacity: .4; pointer-events: none; }
 
   .back-btn {
     background: transparent;
@@ -241,7 +232,6 @@
   }
   .back-btn:hover { background: #f8fafc; border-color: #cbd5e1; }
 
-  /* ---------- 做题页 ---------- */
   .quiz-header {
     display: flex;
     align-items: center;
@@ -328,7 +318,6 @@
   .feedback.correct { color: #059669; }
   .feedback.wrong { color: #dc2626; }
 
-  /* ---------- 弹窗 ---------- */
   .modal-overlay {
     position: fixed;
     inset: 0;
@@ -406,13 +395,11 @@
         </p>
       </div>
 
-      <!-- 导入 / 重置 按钮行 -->
       <div class="action-row">
         <button class="primary-btn" id="importBtn">📥 导入词汇</button>
         <button class="ghost-btn" id="resetInputBtn">重置</button>
       </div>
 
-      <!-- 导入状态提示 -->
       <div class="import-msg" id="importMsg">
         <span class="icon" id="importMsgIcon"></span>
         <span id="importMsgText"></span>
@@ -479,16 +466,15 @@
 (function () {
   'use strict';
 
-  /* ================= 状态 ================= */
-  let vocabulary = [];      // 已成功导入的词汇表 [{en, ch:[...]}]
-  let wordPool = [];        // 未答对的单词池
-  let currentWord = null;   // 当前题目对象
+  let vocabulary = [];
+  let wordPool = [];
+  let currentWord = null;
   let correctCount = 0;
   let wrongCount = 0;
-  let locked = false;       // 防止重复提交
-  let pendingTimer = null;  // 答对后延迟切题
+  let locked = false;
+  let pendingTimer = null;
 
-  /* ================= DOM ================= */
+  /* DOM */
   const pageImport   = document.getElementById('pageImport');
   const pageQuiz     = document.getElementById('pageQuiz');
   const wordInput    = document.getElementById('wordInput');
@@ -512,7 +498,7 @@
   const modalAnswer  = document.getElementById('modalAnswer');
   const modalCloseBtn = document.getElementById('modalCloseBtn');
 
-  /* ================= 工具函数 ================= */
+  /* ---------- 工具函数 ---------- */
   function getQuizMode() {
     const checked = document.querySelector('input[name="quizMode"]:checked');
     return checked ? checked.value : 'en2ch';
@@ -531,7 +517,6 @@
     return arr;
   }
 
-  /* 显示导入提示信息 */
   function showImportMsg(type, text) {
     importMsg.className = 'import-msg show ' + type;
     importMsgIcon.textContent = type === 'success' ? '✅' : '⚠️';
@@ -544,29 +529,26 @@
     importMsgText.textContent = '';
   }
 
-  /* ================= 解析导入内容 ================= */
+  /* ---------- 解析导入内容 ---------- */
   function parseWordList(raw) {
     const tokens = raw.split(',').map(s => s.trim()).filter(Boolean);
-    const map = new Map(); // en -> {en, ch:[]}
-    let skipped = 0;       // 被忽略（无中文释义）的数量
+    const map = new Map();
+    let skipped = 0;
 
     for (const token of tokens) {
       let en = '';
       let chList = [];
 
-      // 形式一： apple(苹果/苹果树)
       let m = token.match(/^(.+?)\s*[（(]\s*([^)）]+?)\s*[）)]\s*$/);
       if (m) {
         en = m[1].trim();
         chList = m[2].split(/[\/、,，]/).map(s => s.trim()).filter(Boolean);
       } else {
-        // 形式二： apple:苹果/苹果树
         m = token.match(/^(.+?)\s*[:：]\s*(.+)$/);
         if (m) {
           en = m[1].trim();
           chList = m[2].split(/[\/、,，]/).map(s => s.trim()).filter(Boolean);
         } else {
-          // 无中文释义 → 忽略
           skipped++;
           continue;
         }
@@ -584,11 +566,10 @@
     return { list: [...map.values()], skipped };
   }
 
-  /* ================= 导入按钮 ================= */
+  /* ---------- 导入 ---------- */
   function handleImport() {
     const raw = wordInput.value.trim();
 
-    // 情况1：内容为空
     if (!raw) {
       vocabulary = [];
       startBtn.disabled = true;
@@ -598,7 +579,6 @@
 
     const { list, skipped } = parseWordList(raw);
 
-    // 情况2：完全没有解析出有效单词
     if (list.length === 0) {
       vocabulary = [];
       startBtn.disabled = true;
@@ -607,7 +587,6 @@
       return;
     }
 
-    // 成功
     vocabulary = list;
     startBtn.disabled = false;
 
@@ -618,27 +597,20 @@
     showImportMsg('success', msg);
   }
 
-  /* ================= 重置按钮 ================= */
+  /* ---------- 重置输入 ---------- */
   function handleResetInput() {
-    // 清空输入框
     wordInput.value = '';
-    // 清空已导入词汇
     vocabulary = [];
-    // 禁用开始按钮
     startBtn.disabled = true;
-    // 清空提示
     hideImportMsg();
-    // 恢复默认出题方式
     document.querySelector('input[name="quizMode"][value="en2ch"]').checked = true;
-    // 聚焦输入框
     wordInput.focus();
   }
 
-  /* ================= 开始 / 重置测验 ================= */
+  /* ---------- 开始测验 ---------- */
   function startQuiz() {
     if (vocabulary.length === 0) return;
 
-    // 深拷贝构建题池
     wordPool = vocabulary.map(w => ({ en: w.en, ch: [...w.ch] }));
     shuffleArray(wordPool);
 
@@ -655,10 +627,12 @@
       showEmptyState();
     } else {
       pickNextWord();
+      // 只在开始练习时聚焦一次，方便直接输入
+      setTimeout(() => answerInput.focus(), 120);
     }
   }
 
-  /* ================= 抽取下一题 ================= */
+  /* ---------- 抽取下一题 ---------- */
   function pickNextWord() {
     if (wordPool.length === 0) {
       currentWord = null;
@@ -677,7 +651,7 @@
     renderQuestion();
   }
 
-  /* ================= 渲染题目 ================= */
+  /* ---------- 渲染题目 ---------- */
   function renderQuestion() {
     if (!currentWord) { showEmptyState(); return; }
 
@@ -699,10 +673,10 @@
     locked = false;
 
     updateStats();
-    setTimeout(() => answerInput.focus(), 60);
+    // 注意：这里不再自动 focus，避免答对后键盘闪动
   }
 
-  /* ================= 统计信息 ================= */
+  /* ---------- 统计 ---------- */
   function updateStats() {
     const total = vocabulary.length;
     const remaining = wordPool.length;
@@ -717,7 +691,7 @@
       : '正确率 --';
   }
 
-  /* ================= 全部完成状态 ================= */
+  /* ---------- 完成状态 ---------- */
   function showEmptyState() {
     questionHint.textContent = '本轮已完成';
     questionPrompt.textContent = '🎉 全部掌握！';
@@ -730,26 +704,47 @@
     updateStats();
   }
 
-  /* ================= 判断答案 ================= */
+  /* ---------- 答案判断 ---------- */
   function checkAnswer(userAnswer, mode) {
     if (!currentWord) return false;
 
-    if (mode === 'en2ch') {
-      const normalize = s => s.replace(/[\s,，、.。?？!！;；:：\/\\]/g, '').toLowerCase();
-      const userParts = userAnswer
-        .split(/[\/、,，]/)
-        .map(s => normalize(s))
-        .filter(Boolean);
-      if (userParts.length === 0) return false;
+    const rawUser = userAnswer.trim();
+    if (!rawUser) return false;
 
-      const stdParts = currentWord.ch.map(normalize);
-      return userParts.some(p => stdParts.includes(p));
+    if (mode === 'en2ch') {
+      // 中文：宽松匹配，只要命中任意一个正确意思就算对
+      const clean = s => s.replace(/[\s,，、.。?？!！;；:：\/\\（）()【】\[\]]/g, '').toLowerCase();
+
+      // 用户输入可能包含多个意思（用 / 、 , 等分隔）
+      const userParts = rawUser
+        .split(/[\/、,，;；]/)
+        .map(s => s.trim())
+        .filter(Boolean);
+      // 如果拆分后为空，用原文
+      const candidates = userParts.length > 0 ? userParts : [rawUser];
+
+      // 标准答案（多个）
+      const stdParts = currentWord.ch.filter(Boolean);
+      if (stdParts.length === 0) return false;
+
+      // 任意一个用户答案 与 任意一个标准答案 完全相等（忽略空格/标点/大小写）即正确
+      for (const uc of candidates) {
+        const cleanUser = clean(uc);
+        if (!cleanUser) continue;
+        for (const sc of stdParts) {
+          if (cleanUser === clean(sc)) {
+            return true;
+          }
+        }
+      }
+      return false;
     } else {
-      return userAnswer.trim().toLowerCase() === currentWord.en.trim().toLowerCase();
+      // 英文：完全拼写正确（忽略大小写和首尾空格）
+      return rawUser.toLowerCase() === currentWord.en.trim().toLowerCase();
     }
   }
 
-  /* ================= 提交答案 ================= */
+  /* ---------- 提交答案 ---------- */
   function handleSubmit() {
     if (locked || !currentWord) return;
 
@@ -764,21 +759,20 @@
     const isCorrect = checkAnswer(userAnswer, mode);
 
     if (isCorrect) {
+      /* ===== 答对 ===== */
       correctCount++;
       const idx = wordPool.indexOf(currentWord);
       if (idx !== -1) wordPool.splice(idx, 1);
 
       feedbackMsg.className = 'feedback correct';
-      feedbackMsg.textContent = mode === 'en2ch'
-        ? `✅ 正确！${currentWord.en} = ${currentWord.ch.join(' / ')}`
-        : `✅ 正确！${currentWord.ch.join(' / ')} = ${currentWord.en}`;
+      feedbackMsg.textContent = '✅ 正确！';
 
       updateStats();
 
+      // 锁定提交，但不禁用输入框（避免键盘收起再弹出）
       locked = true;
-      answerInput.disabled = true;
-      submitBtn.disabled = true;
 
+      // 快速切换下一题（约 350ms 后）
       pendingTimer = setTimeout(() => {
         pendingTimer = null;
         locked = false;
@@ -788,14 +782,16 @@
         } else {
           pickNextWord();
         }
-      }, 850);
+      }, 350);
 
     } else {
+      /* ===== 答错 ===== */
       wrongCount++;
       feedbackMsg.className = 'feedback wrong';
       feedbackMsg.textContent = '❌ 答错了，正确答案已弹出';
       updateStats();
 
+      // 弹出正确答案（中文意思）
       const correctText = mode === 'en2ch'
         ? currentWord.ch.join(' / ')
         : currentWord.en;
@@ -805,7 +801,7 @@
     }
   }
 
-  /* ================= 弹窗关闭 ================= */
+  /* ---------- 关闭弹窗，继续下一题 ---------- */
   function closeModalAndContinue() {
     modal.classList.add('hidden');
     answerInput.value = '';
@@ -817,7 +813,7 @@
     }
   }
 
-  /* ================= 返回首页 ================= */
+  /* ---------- 返回首页 ---------- */
   function goBack() {
     if (pendingTimer) { clearTimeout(pendingTimer); pendingTimer = null; }
     locked = false;
@@ -825,7 +821,7 @@
     switchPage('pageImport');
   }
 
-  /* ================= 事件绑定 ================= */
+  /* ---------- 事件绑定 ---------- */
   importBtn.addEventListener('click', handleImport);
   resetInputBtn.addEventListener('click', handleResetInput);
   startBtn.addEventListener('click', startQuiz);
@@ -844,16 +840,13 @@
     }
   });
 
-  // 修改输入框内容时，若已导入的词汇与当前输入不再匹配，则禁用开始按钮并隐藏旧提示
   wordInput.addEventListener('input', () => {
     if (vocabulary.length > 0) {
-      // 有已导入的词，用户又修改了输入框 → 需要重新导入
       startBtn.disabled = true;
       hideImportMsg();
     }
   });
 
-  // 切换模式
   document.querySelectorAll('input[name="quizMode"]').forEach(radio => {
     radio.addEventListener('change', () => {
       if (pageQuiz.classList.contains('active') && currentWord) {
@@ -862,7 +855,7 @@
     });
   });
 
-  /* ================= 初始状态 ================= */
+  /* 初始 */
   updateStats();
 })();
 </script>
